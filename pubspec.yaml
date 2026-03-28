@@ -19,7 +19,7 @@ dev_dependencies:
     sdk: flutter
 
 executables:
-  patrol-screenshot:
+  patrol-screenshot: patrol_screenshot
 
 topics:
   - flutter
