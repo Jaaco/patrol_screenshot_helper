@@ -63,5 +63,10 @@ app.*.map.json
 **/ios/**/ServiceDefinitions.json
 **/ios/**/Runner/GeneratedPluginRegistrant.*
 
+# Gas Town / Beads runtime artifacts
+.beads/
+.claude/
+.runtime/
+
 # Exceptions to above rules.
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
