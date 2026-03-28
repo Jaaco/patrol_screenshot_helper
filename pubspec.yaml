@@ -18,6 +18,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+executables:
+  patrol-screenshot:
+
 topics:
   - flutter
   - testing

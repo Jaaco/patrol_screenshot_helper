@@ -1,0 +1,156 @@
+#!/bin/bash
+set -euo pipefail
+
+VERSION="0.1.0"
+DEVICE="chrome"
+OUT_BASE="test_results"
+
+usage() {
+  cat <<EOF
+patrol-screenshot v$VERSION — Screenshot capture for Patrol integration tests
+
+Usage:
+  patrol-screenshot <test_file> [options]
+
+Options:
+  --device <device>      Target device (default: chrome)
+  --output-dir <path>    Base output directory (default: test_results)
+  --help                 Show this help message
+
+Examples:
+  patrol-screenshot integration_test/main_test.dart
+  patrol-screenshot integration_test/main_test.dart --device chrome
+  patrol-screenshot integration_test/main_test.dart --output-dir ./screenshots
+EOF
+  exit 0
+}
+
+# ── Parse arguments ─────────────────────────────────────────────────────────
+
+TEST_FILE=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --device)   DEVICE="$2"; shift 2 ;;
+    --output-dir) OUT_BASE="$2"; shift 2 ;;
+    --help|-h)  usage ;;
+    -*)         echo "Unknown option: $1"; usage ;;
+    *)          TEST_FILE="$1"; shift ;;
+  esac
+done
+
+if [[ -z "$TEST_FILE" ]]; then
+  echo "Error: No test file specified."
+  echo ""
+  usage
+fi
+
+# ── Setup output directory ──────────────────────────────────────────────────
+
+mkdir -p "$OUT_BASE"
+LAST_ID=$(ls "$OUT_BASE" 2>/dev/null | grep -Eo '^run_[0-9]+$' | grep -Eo '[0-9]+' | sort -n | tail -1)
+if [[ -z "${LAST_ID:-}" ]]; then
+  NEXT_ID=1
+else
+  NEXT_ID=$((LAST_ID + 1))
+fi
+
+OUT_DIR="$OUT_BASE/run_${NEXT_ID}/screenshots"
+mkdir -p "$OUT_DIR"
+
+echo "======================================================"
+echo "  patrol-screenshot v$VERSION"
+echo "  Test run #$NEXT_ID"
+echo "  Target:      $TEST_FILE"
+echo "  Device:      $DEVICE"
+echo "  Screenshots: $OUT_DIR"
+echo "======================================================"
+
+# ── Spinner ─────────────────────────────────────────────────────────────────
+
+spinner_pid=""
+
+start_spinner() {
+  local label="$1"
+  local frames=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏)
+  (
+    local i=0
+    while true; do
+      printf "\r  %s  %s " "${frames[i]}" "$label"
+      i=$(( (i + 1) % ${#frames[@]} ))
+      sleep 0.08
+    done
+  ) &
+  spinner_pid=$!
+}
+
+stop_spinner() {
+  if [[ -n "$spinner_pid" ]]; then
+    kill "$spinner_pid" 2>/dev/null
+    wait "$spinner_pid" 2>/dev/null
+    printf "\r\033[2K"
+    spinner_pid=""
+  fi
+}
+
+# ── Run patrol and parse screenshot protocol ────────────────────────────────
+
+SCREENSHOT_COUNT=0
+START_TIME=$(date +%s)
+
+patrol test --target "$TEST_FILE" --device "$DEVICE" --show-flutter-logs 2>&1 | while IFS= read -r line; do
+
+  # Print normal output (suppress screenshot protocol lines)
+  if [[ "$line" != *"[[PATROL_SCREENSHOT_START|"* ]] && \
+     [[ "$line" != *"[[PATROL_SCREENSHOT_CHUNK|"* ]] && \
+     [[ "$line" != *"[[PATROL_SCREENSHOT_END|"* ]]; then
+    echo "$line"
+  fi
+
+  # --- Handle START ---
+  if [[ "$line" == *"[[PATROL_SCREENSHOT_START|"* ]]; then
+    payload="${line#*\[\[PATROL_SCREENSHOT_START|}"
+    name="${payload%\]\]*}"
+    > "$OUT_DIR/${name}.b64"
+    start_spinner "Capturing screenshot: $name"
+
+  # --- Handle CHUNKS ---
+  elif [[ "$line" == *"[[PATROL_SCREENSHOT_CHUNK|"* ]]; then
+    payload="${line#*\[\[PATROL_SCREENSHOT_CHUNK|}"
+    payload="${payload%\]\]*}"
+    name="${payload%%|*}"
+    chunk="${payload#*|}"
+    printf "%s" "$chunk" | tr -d -c 'A-Za-z0-9+/=' >> "$OUT_DIR/${name}.b64"
+
+  # --- Handle END (Decode) ---
+  elif [[ "$line" == *"[[PATROL_SCREENSHOT_END|"* ]]; then
+    payload="${line#*\[\[PATROL_SCREENSHOT_END|}"
+    name="${payload%\]\]*}"
+
+    stop_spinner
+
+    B64_FILE="$OUT_DIR/${name}.b64"
+    PNG_FILE="$OUT_DIR/${name}.png"
+
+    base64 --decode < "$B64_FILE" > "$PNG_FILE" 2>/dev/null || \
+    base64 -D < "$B64_FILE" > "$PNG_FILE" 2>/dev/null || \
+    base64 -d < "$B64_FILE" > "$PNG_FILE" 2>/dev/null
+
+    rm "$B64_FILE"
+
+    if [[ -s "$PNG_FILE" ]]; then
+      echo "  -> Saved: $PNG_FILE"
+      SCREENSHOT_COUNT=$((SCREENSHOT_COUNT + 1))
+    else
+      echo "  -> FAILED: $PNG_FILE (0 bytes)"
+    fi
+  fi
+done
+
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+
+echo ""
+echo "======================================================"
+echo "  Done. ${SCREENSHOT_COUNT} screenshot(s) saved to $OUT_DIR"
+echo "  Duration: ${DURATION}s"
+echo "======================================================"
