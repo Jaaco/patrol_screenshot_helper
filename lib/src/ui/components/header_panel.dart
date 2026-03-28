@@ -1,20 +1,20 @@
 import 'package:nocterm/nocterm.dart';
 
 class HeaderPanel extends StatelessComponent {
+  const HeaderPanel({super.key});
+
   @override
   Component build(BuildContext context) {
     return Container(
       color: Color.fromRGB(30, 30, 30),
       child: Padding(
-        padding: const EdgeInsets.all(1),
+        padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 0),
         child: RichText(
           text: TextSpan(
             children: [
               TextSpan(
                 text: '▶ ',
-                style: TextStyle(
-                  color: Color.fromRGB(0, 200, 100),
-                ),
+                style: TextStyle(color: Color.fromRGB(0, 200, 100)),
               ),
               TextSpan(
                 text: 'Patrol Screenshot Helper - Test Runner',

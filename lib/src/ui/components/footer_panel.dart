@@ -2,58 +2,39 @@ import 'package:nocterm/nocterm.dart';
 import '../state.dart';
 
 class FooterPanel extends StatelessComponent {
+  final int testCount;
   final ExecutionStatus status;
-  final List tests;
 
   const FooterPanel({
+    super.key,
+    required this.testCount,
     required this.status,
-    required this.tests,
   });
 
   @override
   Component build(BuildContext context) {
-
-    final statusText = _statusText(status);
-    final statusColor = _statusColor(status);
-
     return Container(
-      color: Color.fromARGB(255, 30, 30, 30),
+      color: Color.fromRGB(30, 30, 30),
       child: Padding(
-        padding: const EdgeInsets.all(1),
+        padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 0),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: '[▶ Run] ',
-                    style: TextStyle(
-                      color: Color.fromARGB(255, 0, 200, 100),
-                    ),
-                  ),
-                  TextSpan(
-                    text: '[Cancel] ',
-                    style: TextStyle(
-                      color: Color.fromARGB(255, 200, 0, 0),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            RichText(
-              text: TextSpan(
-                text: statusText,
-                style: TextStyle(color: statusColor),
-              ),
-            ),
-            RichText(
-              text: TextSpan(
-                text: 'Found: ${tests.length} | ↑↓: Nav | Enter: Run | q: Quit',
-                style: TextStyle(
-                  color: Color.fromARGB(255, 150, 150, 150),
+              text: TextSpan(children: [
+                TextSpan(
+                  text: '[▶ Run] ',
+                  style: TextStyle(color: Color.fromRGB(0, 200, 100)),
                 ),
-              ),
+                TextSpan(
+                  text: _statusText,
+                  style: TextStyle(color: _statusColor),
+                ),
+              ]),
+            ),
+            Expanded(child: SizedBox()),
+            Text(
+              'Found: $testCount | ↑↓: Nav | Enter: Run | q: Quit',
+              style: TextStyle(color: Color.fromRGB(150, 150, 150)),
             ),
           ],
         ),
@@ -61,7 +42,7 @@ class FooterPanel extends StatelessComponent {
     );
   }
 
-  String _statusText(ExecutionStatus status) {
+  String get _statusText {
     switch (status) {
       case ExecutionStatus.idle:
         return 'Idle';
@@ -76,18 +57,18 @@ class FooterPanel extends StatelessComponent {
     }
   }
 
-  Color _statusColor(ExecutionStatus status) {
+  Color get _statusColor {
     switch (status) {
       case ExecutionStatus.idle:
-        return Color.fromARGB(255, 150, 150, 150);
+        return Color.fromRGB(150, 150, 150);
       case ExecutionStatus.running:
-        return Color.fromARGB(255, 255, 200, 0);
+        return Color.fromRGB(255, 200, 0);
       case ExecutionStatus.passed:
-        return Color.fromARGB(255, 0, 200, 100);
+        return Color.fromRGB(0, 200, 100);
       case ExecutionStatus.failed:
-        return Color.fromARGB(255, 200, 0, 0);
+        return Color.fromRGB(200, 0, 0);
       case ExecutionStatus.error:
-        return Color.fromARGB(255, 255, 100, 0);
+        return Color.fromRGB(255, 100, 0);
     }
   }
 }

@@ -1,70 +1,83 @@
 import 'package:nocterm/nocterm.dart';
-import '../models/test_file.dart';
+import 'state.dart';
 import 'components/header_panel.dart';
 import 'components/search_bar.dart';
 import 'components/test_list.dart';
 import 'components/detail_panel.dart';
 import 'components/footer_panel.dart';
-import 'state.dart';
 
 class MainApp extends StatefulComponent {
+  const MainApp({super.key});
+
   @override
   State<StatefulComponent> createState() => _MainAppState();
 }
 
 class _MainAppState extends State<MainApp> {
-  String _searchQuery = '';
-  int _selectedIndex = 0;
-  TestFile? _selectedTest;
-  List<TestFile> _tests = [];
-  ExecutionStatus _status = ExecutionStatus.idle;
+  AppState _appState = const AppState();
 
   @override
   void initState() {
-    // Initialize with empty state
     super.initState();
+    _loadTests();
+  }
+
+  Future<void> _loadTests() async {
+    final tests = await loadTests();
+    setState(() {
+      _appState = _appState.copyWith(allTests: tests);
+    });
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      _appState = _appState.copyWith(searchQuery: query, selectedIndex: 0);
+    });
+  }
+
+  void _onSelectTest(int index) {
+    setState(() {
+      _appState = _appState.copyWith(selectedIndex: index);
+    });
   }
 
   @override
   Component build(BuildContext context) {
-    final filteredTests = _tests.isEmpty ? <TestFile>[] : _tests;
-
     return Column(
       children: [
         SizedBox(height: 1, child: HeaderPanel()),
-        SizedBox(height: 1, child: SearchBar(
-          query: _searchQuery,
-          onQueryChanged: (value) {
-            setState(() => _searchQuery = value);
-          },
-        )),
+        SizedBox(height: 1, child: SearchBar(onChanged: _onSearchChanged)),
         Expanded(
           child: Row(
             children: [
-              SizedBox(
-                width: 40,
+              Expanded(
+                flex: 2,
                 child: TestListWidget(
-                  tests: filteredTests,
-                  selectedIndex: _selectedIndex,
-                  onSelectionChanged: (index) {
-                    setState(() {
-                      _selectedIndex = index;
-                      _selectedTest = index < filteredTests.length ? filteredTests[index] : null;
-                    });
-                  },
+                  tests: _appState.filteredTests,
+                  selectedIndex: _appState.selectedIndex,
+                  onSelectTest: _onSelectTest,
                 ),
               ),
-              SizedBox(width: 1, child: Container(color: Color.fromARGB(255, 40, 40, 40))),
+              SizedBox(
+                width: 1,
+                child: Container(
+                  color: Color.fromRGB(40, 40, 40),
+                ),
+              ),
               Expanded(
-                child: DetailPanel(selectedTest: _selectedTest),
+                flex: 2,
+                child: DetailPanel(selectedTest: _appState.selectedTest),
               ),
             ],
           ),
         ),
-        SizedBox(height: 1, child: FooterPanel(
-          status: _status,
-          tests: filteredTests,
-        )),
+        SizedBox(
+          height: 1,
+          child: FooterPanel(
+            testCount: _appState.filteredTests.length,
+            status: _appState.executionStatus,
+          ),
+        ),
       ],
     );
   }

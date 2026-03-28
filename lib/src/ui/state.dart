@@ -1,61 +1,54 @@
-import 'package:riverpod/riverpod.dart';
 import '../models/test_file.dart';
 import '../test_discovery.dart';
 
-enum ExecutionStatus {
-  idle,
-  running,
-  passed,
-  failed,
-  error,
+enum ExecutionStatus { idle, running, passed, failed, error }
+
+class AppState {
+  final List<TestFile> allTests;
+  final String searchQuery;
+  final int selectedIndex;
+  final ExecutionStatus executionStatus;
+
+  const AppState({
+    this.allTests = const [],
+    this.searchQuery = '',
+    this.selectedIndex = 0,
+    this.executionStatus = ExecutionStatus.idle,
+  });
+
+  List<TestFile> get filteredTests {
+    if (searchQuery.isEmpty) return allTests;
+    final lower = searchQuery.toLowerCase();
+    return allTests
+        .where((t) =>
+            t.name.toLowerCase().contains(lower) ||
+            t.path.toLowerCase().contains(lower) ||
+            t.description.toLowerCase().contains(lower))
+        .toList();
+  }
+
+  TestFile? get selectedTest {
+    final tests = filteredTests;
+    if (tests.isEmpty || selectedIndex < 0 || selectedIndex >= tests.length) {
+      return null;
+    }
+    return tests[selectedIndex];
+  }
+
+  AppState copyWith({
+    List<TestFile>? allTests,
+    String? searchQuery,
+    int? selectedIndex,
+    ExecutionStatus? executionStatus,
+  }) {
+    return AppState(
+      allTests: allTests ?? this.allTests,
+      searchQuery: searchQuery ?? this.searchQuery,
+      selectedIndex: selectedIndex ?? this.selectedIndex,
+      executionStatus: executionStatus ?? this.executionStatus,
+    );
+  }
 }
 
-/// Discover all test files in integration-test directory
-final testListProvider = FutureProvider<List<TestFile>>((ref) async {
-  return TestDiscoveryEngine.scan('./integration-test/');
-});
-
-/// Current search query
-final searchQueryProvider = StateProvider<String>((ref) => '');
-
-/// Selected test index
-final selectedTestIndexProvider = StateProvider<int>((ref) => 0);
-
-/// Filtered tests based on search query
-final filteredTestsProvider = Provider<List<TestFile>>((ref) {
-  final allTestsAsync = ref.watch(testListProvider);
-  final query = ref.watch(searchQueryProvider);
-
-  return allTestsAsync.maybeWhen(
-    data: (tests) {
-      if (query.isEmpty) return tests;
-      final lower = query.toLowerCase();
-      return tests
-          .where((test) =>
-              test.name.toLowerCase().contains(lower) ||
-              test.path.toLowerCase().contains(lower) ||
-              test.description.toLowerCase().contains(lower))
-          .toList();
-    },
-    orElse: () => [],
-  );
-});
-
-/// Get currently selected test
-final selectedTestProvider = Provider<TestFile?>((ref) {
-  final tests = ref.watch(filteredTestsProvider);
-  final index = ref.watch(selectedTestIndexProvider);
-
-  if (tests.isEmpty || index < 0 || index >= tests.length) {
-    return null;
-  }
-  return tests[index];
-});
-
-/// Current execution status
-final executionStatusProvider = StateProvider<ExecutionStatus>(
-  (ref) => ExecutionStatus.idle,
-);
-
-/// Last execution result
-final lastExecutionResultProvider = StateProvider<String?>((ref) => null);
+Future<List<TestFile>> loadTests() =>
+    TestDiscoveryEngine.scan('./integration-test/');
