@@ -6,6 +6,7 @@ set -euo pipefail
 # ==============================================================================
 
 APP_NAME="patrol-screenshot"
+APP_NAME_UI="patrol-screenshot-ui"
 REPO_URL="https://github.com/Jaaco/patrol_screenshot_helper.git"
 
 # Where the source code will live on the user's machine
@@ -85,7 +86,23 @@ fi
 $SUDO mv "$TMP_WRAPPER" "$SHORTCUT_PATH"
 $SUDO chmod +x "$SHORTCUT_PATH"
 
-info "Successfully installed $APP_NAME!"
+# 6. Create the UI shortcut wrapper
+SHORTCUT_PATH_UI="$INSTALL_DIR/$APP_NAME_UI"
+info "Creating global shortcut at $SHORTCUT_PATH_UI..."
+
+TMP_WRAPPER_UI="$(mktemp)"
+cat << 'EOF' > "$TMP_WRAPPER_UI"
+#!/bin/bash
+# Wrapper for patrol-screenshot-ui
+EOF
+
+echo "dart \"$SOURCE_DIR/bin/patrol_screenshot_ui.dart\" \"\$@\"" >> "$TMP_WRAPPER_UI"
+
+$SUDO mv "$TMP_WRAPPER_UI" "$SHORTCUT_PATH_UI"
+$SUDO chmod +x "$SHORTCUT_PATH_UI"
+
+info "Successfully installed $APP_NAME and $APP_NAME_UI!"
 echo ""
-echo -e "${GREEN}You can now use the command from anywhere:${NC}"
+echo -e "${GREEN}You can now use the commands from anywhere:${NC}"
 echo "  $APP_NAME --help"
+echo "  $APP_NAME_UI"
