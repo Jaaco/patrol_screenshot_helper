@@ -5,7 +5,7 @@ set -euo pipefail
 
 APP_NAME="patrol-screenshot"
 
-DOWNLOAD_URL="https://raw.githubusercontent.com/Jaaco/patrol_screenshot_helper/main/bin/patrol-screenshot"
+DOWNLOAD_URL="https://raw.githubusercontent.com/Jaaco/patrol_screenshot_helper/main/bin/patrol_screenshot.dart"
 
 # The directory where the executable will be installed.
 # Allows users to override it like:
