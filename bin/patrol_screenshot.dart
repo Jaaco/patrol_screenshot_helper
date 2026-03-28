@@ -8,6 +8,7 @@ void main(List<String> arguments) async {
   String device = 'chrome';
   String outBase = 'test_results';
   String? testFile;
+  bool verbose = false;
 
   // Parse arguments
   int i = 0;
@@ -26,6 +27,10 @@ void main(List<String> arguments) async {
           exit(1);
         }
         outBase = arguments[++i];
+        break;
+      case '--verbose':
+      case '-v':
+        verbose = true;
         break;
       case '--help':
       case '-h':
@@ -79,30 +84,31 @@ void main(List<String> arguments) async {
     nextId = 1;
   }
 
-  final runDir = Directory('$outBase/run_$nextId');
-  final screenshotDir = Directory('${runDir.path}/screenshots');
-  try {
-    await screenshotDir.create(recursive: true);
-  } catch (e) {
-    stderr.writeln('Error: Could not create screenshot directory: $e');
-    exit(1);
-  }
+  final screenshotDirPath = '$outBase/run_$nextId/screenshots';
 
   print('======================================================');
   print('  patrol-screenshot v$version');
   print('  Test run #$nextId');
   print('  Target:      $testFile');
   print('  Device:      $device');
-  print('  Screenshots: ${screenshotDir.path}');
+  print('  Screenshots: $screenshotDirPath');
   print('======================================================');
 
   final startTime = DateTime.now();
   int screenshotCount = 0;
 
   try {
-    final args = ['test', '--target', testFile, '--device', device, '--show-flutter-logs', '--verbose'];
-    stderr.writeln('[debug] Running: patrol ${args.join(' ')}');
-    stderr.writeln('[debug] Working directory: ${Directory.current.path}');
+    final args = [
+      'test',
+      '--target', testFile,
+      '--device', device,
+      '--show-flutter-logs',
+      if (verbose) '--verbose',
+    ];
+    if (verbose) {
+      stderr.writeln('[debug] Running: patrol ${args.join(' ')}');
+      stderr.writeln('[debug] Working directory: ${Directory.current.path}');
+    }
 
     final process = await Process.start('patrol', args);
 
@@ -110,7 +116,7 @@ void main(List<String> arguments) async {
     process.stderr
         .transform(utf8.decoder)
         .transform(const LineSplitter())
-        .listen((line) => stderr.writeln('[patrol stderr] $line'));
+        .listen((line) => stderr.writeln(verbose ? '[patrol stderr] $line' : line));
 
     final lines = process.stdout
         .transform(utf8.decoder)
@@ -120,7 +126,7 @@ void main(List<String> arguments) async {
     Map<String, StringBuffer> pendingScreenshots = {};
 
     await for (final line in lines) {
-      stderr.writeln('[patrol stdout raw] $line');
+      if (verbose) stderr.writeln('[patrol stdout raw] $line');
       // Check for screenshot protocol markers
       if (line.contains('[[PATROL_SCREENSHOT_START|')) {
         final payload = _extractPayload(line, 'PATROL_SCREENSHOT_START');
@@ -146,7 +152,7 @@ void main(List<String> arguments) async {
           await _decodeAndSaveScreenshot(
             payload,
             pendingScreenshots[payload]!.toString(),
-            screenshotDir.path,
+            screenshotDirPath,
           );
           pendingScreenshots.remove(payload);
           screenshotCount++;
@@ -159,7 +165,7 @@ void main(List<String> arguments) async {
 
     spinnerController.stop();
     final exitCode = await process.exitCode;
-    stderr.writeln('[debug] patrol exit code: $exitCode');
+    if (verbose) stderr.writeln('[debug] patrol exit code: $exitCode');
     if (exitCode != 0) {
       exit(exitCode);
     }
@@ -173,7 +179,7 @@ void main(List<String> arguments) async {
 
   print('');
   print('======================================================');
-  print('  Done. $screenshotCount screenshot(s) saved to ${screenshotDir.path}');
+  print('  Done. $screenshotCount screenshot(s) saved to $screenshotDirPath');
   print('  Duration: ${duration}s');
   print('======================================================');
 }
@@ -187,6 +193,7 @@ void _printUsage() {
   print('Options:');
   print('  --device <device>      Target device (default: chrome)');
   print('  --output-dir <path>    Base output directory (default: test_results)');
+  print('  --verbose, -v          Enable verbose debug output');
   print('  --help                 Show this help message');
   print('');
   print('Examples:');
@@ -233,6 +240,7 @@ Future<void> _decodeAndSaveScreenshot(
   final pngPath = '$outDir/$name.png';
 
   try {
+    await Directory(outDir).create(recursive: true);
     final bytes = base64Decode(base64String);
     final file = File(pngPath);
     await file.writeAsBytes(bytes);
