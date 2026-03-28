@@ -1,0 +1,25 @@
+name: patrol_screenshot_helper
+description: A lightweight Flutter helper package for capturing screenshots in Patrol integration tests. Provides simple functions to wrap widgets and capture screenshots with auto-incrementing filenames.
+version: 0.1.0
+homepage: https://github.com/jaschenwald/patrol_screenshot_helper
+repository: https://github.com/jaschenwald/patrol_screenshot_helper
+issue_tracker: https://github.com/jaschenwald/patrol_screenshot_helper/issues
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  screenshot: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+topics:
+  - flutter
+  - testing
+  - patrol
+  - screenshots
