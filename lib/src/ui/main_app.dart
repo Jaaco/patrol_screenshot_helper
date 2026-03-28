@@ -1,10 +1,9 @@
+import 'dart:io';
+
 import 'package:nocterm/nocterm.dart';
-import 'state.dart';
-import 'components/header_panel.dart';
-import 'components/search_bar.dart';
-import 'components/test_list.dart';
-import 'components/detail_panel.dart';
-import 'components/footer_panel.dart';
+
+import '../test_discovery.dart';
+import '../models/test_file.dart';
 
 class MainApp extends StatefulComponent {
   const MainApp({super.key});
@@ -14,71 +13,63 @@ class MainApp extends StatefulComponent {
 }
 
 class _MainAppState extends State<MainApp> {
-  AppState _appState = const AppState();
+  List<TestFile> _files = [];
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadTests();
+    _load();
   }
 
-  Future<void> _loadTests() async {
-    final tests = await loadTests();
+  Future<void> _load() async {
+    final files = await TestDiscoveryEngine.scan('./integration-test/');
     setState(() {
-      _appState = _appState.copyWith(allTests: tests);
+      _files = files;
+      _selectedIndex = 0;
     });
   }
 
-  void _onSearchChanged(String query) {
-    setState(() {
-      _appState = _appState.copyWith(searchQuery: query, selectedIndex: 0);
-    });
-  }
-
-  void _onSelectTest(int index) {
-    setState(() {
-      _appState = _appState.copyWith(selectedIndex: index);
-    });
+  bool _onKey(KeyboardEvent event) {
+    if (event.logicalKey == LogicalKey.arrowUp) {
+      setState(() {
+        if (_selectedIndex > 0) _selectedIndex--;
+      });
+      return true;
+    } else if (event.logicalKey == LogicalKey.arrowDown) {
+      setState(() {
+        if (_selectedIndex < _files.length - 1) _selectedIndex++;
+      });
+      return true;
+    } else if (event.logicalKey == LogicalKey.enter) {
+      exit(0);
+    }
+    return false;
   }
 
   @override
   Component build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(height: 1, child: HeaderPanel()),
-        SizedBox(height: 1, child: SearchBar(onChanged: _onSearchChanged)),
-        Expanded(
-          child: Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: TestListWidget(
-                  tests: _appState.filteredTests,
-                  selectedIndex: _appState.selectedIndex,
-                  onSelectTest: _onSelectTest,
-                ),
-              ),
-              SizedBox(
-                width: 1,
-                child: Container(
-                  color: Color.fromRGB(40, 40, 40),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: DetailPanel(selectedTest: _appState.selectedTest),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: 1,
-          child: FooterPanel(
-            testCount: _appState.filteredTests.length,
-            status: _appState.executionStatus,
-          ),
-        ),
-      ],
+    return Focusable(
+      focused: true,
+      onKeyEvent: _onKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: _files.isEmpty
+            ? [Text('No test files found in ./integration-test/')]
+            : _files.asMap().entries.map((entry) {
+                final i = entry.key;
+                final file = entry.value;
+                final selected = i == _selectedIndex;
+                return Text(
+                  '${selected ? '> ' : '  '}${file.displayName}',
+                  style: TextStyle(
+                    color: selected
+                        ? Color.fromRGB(0, 200, 100)
+                        : Color.fromRGB(200, 200, 200),
+                  ),
+                );
+              }).toList(),
+      ),
     );
   }
 }
