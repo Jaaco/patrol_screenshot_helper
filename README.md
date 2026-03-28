@@ -1,6 +1,10 @@
 # patrol_screenshot_helper
 
-A lightweight Flutter helper package for capturing screenshots in Patrol integration tests. Provides simple functions to wrap widgets and capture screenshots with auto-incrementing filenames.
+A comprehensive solution for managing Patrol integration tests: a lightweight Flutter helper package for widget screenshot capture, plus a terminal UI for discovering and managing tests.
+
+**This repository contains:**
+- **patrol_screenshot_helper** (main package) — Flutter widget wrapper and screenshot utilities
+- **patrol_screenshot_cli** (subdirectory) — Dart-only CLI tool for global installation (no Flutter dependency)
 
 ## Features
 
@@ -55,24 +59,40 @@ The output format is designed to be parsed by test runners:
 
 ## Nocterm Terminal UI
 
-Discover and manage your patrol tests with an interactive terminal UI.
+Discover and manage your patrol tests with an interactive terminal UI. Install globally like `patrol` to use across all projects.
+
+### Installation (Global)
+
+Install the CLI globally from Git:
+
+```bash
+dart pub global activate --source git https://github.com/Jaaco/patrol_screenshot_helper.git --git-path patrol_screenshot_cli
+```
+
+Ensure `~/.pub-cache/bin` is in your PATH:
+
+```bash
+export PATH="$PATH:$HOME/.pub-cache/bin"
+```
 
 ### Quick Start
 
-Launch the nocterm terminal UI application:
-
-```bash
-# Install dependencies
-dart pub get
-
-# Start the TUI
-dart bin/patrol_screenshot_ui.dart
-```
-
-Or use the installed command:
+After global installation, launch from any project directory:
 
 ```bash
 patrol-screenshot-ui
+```
+
+The command automatically scans the `./integration-test/` directory for patrol tests.
+
+### Development: Run Locally
+
+To run the CLI without global installation:
+
+```bash
+cd patrol_screenshot_cli
+dart pub get
+dart bin/patrol_screenshot_ui.dart
 ```
 
 ### Features
@@ -116,21 +136,30 @@ patrol-screenshot-ui
 ### Requirements
 
 - **Dart SDK**: >=3.0.0
-- **Dependencies**: nocterm ^0.1.0, riverpod ^2.4.0
+- **CLI Package**: Dart-only, no Flutter dependency required for global use
+- **TUI Library**: nocterm ^0.1.0, riverpod ^2.4.0 (managed by patrol_screenshot_cli)
 
 ### Troubleshooting
+
+**Command not found after installation**
+- Verify `~/.pub-cache/bin` is in your PATH: `echo $PATH | grep pub-cache`
+- Add to your shell profile: `export PATH="$PATH:$HOME/.pub-cache/bin"`
+- Reload shell: `source ~/.bashrc` (or `~/.zshrc` for zsh)
 
 **"No tests found"**
 - Ensure test files are in the `./integration-test/` directory
 - Test files must follow the naming pattern `*_test.dart`
+- Run from project root where `integration-test/` exists
 
 **Dependencies resolve to incompatible versions**
-- Run `dart pub get --no-precompile` to refresh the lock file
-- Check that your Dart SDK version is >=3.0.0 with `dart --version`
+- Update Dart SDK: `dart upgrade`
+- Clear pub cache: `dart pub cache clean`
+- Reinstall: `dart pub global activate --source git <repo> --git-path patrol_screenshot_cli`
 
 **Application crashes on startup**
 - Ensure your terminal supports ANSI escape codes (most modern terminals do)
 - Try a different terminal emulator if issues persist
+- Check Dart version: `dart --version` (requires >=3.0.0)
 
 ## Dependencies
 
