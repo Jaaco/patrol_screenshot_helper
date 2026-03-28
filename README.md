@@ -53,10 +53,91 @@ The output format is designed to be parsed by test runners:
 [[PATROL_SCREENSHOT_END|<name>]]
 ```
 
+## Nocterm Terminal UI
+
+Discover and manage your patrol tests with an interactive terminal UI.
+
+### Quick Start
+
+Launch the nocterm terminal UI application:
+
+```bash
+# Install dependencies
+dart pub get
+
+# Start the TUI
+dart bin/patrol_screenshot_ui.dart
+```
+
+Or use the installed command:
+
+```bash
+patrol-screenshot-ui
+```
+
+### Features
+
+- **Test Discovery** - Automatically scans `./integration-test/` for all `*_test.dart` files
+- **Real-time Search** - Filter tests by name, path, or description as you type
+- **Test Details** - View full metadata for each test (path, description, test cases, last modified)
+- **Keyboard Navigation** - Arrow keys to navigate, Enter to run, q to quit
+- **Test Case Listing** - See individual test cases within each test file
+
+### How to Use
+
+1. **Navigate Tests**: Use `↑` and `↓` arrow keys to move through the test list
+2. **Search**: Press `/` or `Ctrl+F` to focus the search bar, then type to filter
+3. **View Details**: Select a test to see its full details in the right panel
+4. **Run Test**: Press `Enter` on a selected test (feature in development)
+5. **Quit**: Press `q` or `Ctrl+C` to exit
+
+### Example Session
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ ▶ Patrol Screenshot Helper - Test Runner (v0.2.0)           │
+├──────────────────────────────────────────────────────────────┤
+│ Search: [_________________] (Type to filter)                 │
+├─────────────────────────────┬────────────────────────────────┤
+│  Found Tests (12)           │ Details                         │
+├─────────────────────────────┼────────────────────────────────┤
+│ > app_initial_state         │ Path:                           │
+│   auth_login                │   integration-test/app_test     │
+│   dashboard_widget          │ Description:                    │
+│   profile_avatar_display    │   Verifies app initializes      │
+│   settings_form             │   without crashes               │
+│   ...                       │                                 │
+│                             │ Test Cases: 1                   │
+├─────────────────────────────┴────────────────────────────────┤
+│ [▶ Run] [Cancel] | Idle | ↑↓: Select | Enter: Run | q: Quit │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Requirements
+
+- **Dart SDK**: >=3.0.0
+- **Dependencies**: nocterm ^0.1.0, riverpod ^2.4.0
+
+### Troubleshooting
+
+**"No tests found"**
+- Ensure test files are in the `./integration-test/` directory
+- Test files must follow the naming pattern `*_test.dart`
+
+**Dependencies resolve to incompatible versions**
+- Run `dart pub get --no-precompile` to refresh the lock file
+- Check that your Dart SDK version is >=3.0.0 with `dart --version`
+
+**Application crashes on startup**
+- Ensure your terminal supports ANSI escape codes (most modern terminals do)
+- Try a different terminal emulator if issues persist
+
 ## Dependencies
 
 - `flutter` - Flutter SDK (>=3.0.0)
 - `screenshot` - Screenshot capture plugin (^2.0.0)
+- `nocterm` - Terminal UI framework (^0.1.0)
+- `riverpod` - State management (^2.4.0)
 
 ## License
 
