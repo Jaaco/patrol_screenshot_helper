@@ -1,29 +1,16 @@
 import 'package:nocterm/nocterm.dart';
-import 'package:riverpod/riverpod.dart';
-import '../state.dart';
 
-class SearchBar extends StatefulComponent {
-  @override
-  State<StatefulComponent> createState() => _SearchBarState();
-}
+class SearchBar extends StatelessComponent {
+  final String query;
+  final Function(String) onQueryChanged;
 
-class _SearchBarState extends State<SearchBar> {
-  late TextEditingController _controller;
-
-  @override
-  void initState() {
-    _controller = TextEditingController();
-    super.initState();
-  }
+  const SearchBar({
+    required this.query,
+    required this.onQueryChanged,
+  });
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Component build(BuildContext context) {
     return Container(
       color: Color.fromARGB(255, 40, 40, 40),
       child: Padding(
@@ -34,20 +21,16 @@ class _SearchBarState extends State<SearchBar> {
               text: TextSpan(
                 text: 'Search: ',
                 style: TextStyle(
-                  foreground: Paint()..color = Color.fromARGB(255, 200, 200, 200),
+                  color: Color.fromARGB(255, 200, 200, 200),
                 ),
               ),
             ),
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                onChanged: (value) {
-                  // Update search query in state
-                  context.read(searchQueryProvider.notifier).state = value;
-                },
-                decoration: InputDecoration(
-                  hintText: 'Type to filter tests...',
-                  border: OutlineInputBorder(),
+            SizedBox(width: 2),
+            RichText(
+              text: TextSpan(
+                text: query.isEmpty ? 'Type to filter tests...' : query,
+                style: TextStyle(
+                  color: Color.fromARGB(255, 150, 150, 150),
                 ),
               ),
             ),

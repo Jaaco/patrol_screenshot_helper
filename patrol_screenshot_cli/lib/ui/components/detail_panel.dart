@@ -1,11 +1,12 @@
 import 'package:nocterm/nocterm.dart';
-import 'package:riverpod/riverpod.dart';
-import '../state.dart';
 
 class DetailPanel extends StatelessComponent {
+  final selectedTest;
+
+  const DetailPanel({this.selectedTest});
+
   @override
-  Widget build(BuildContext context) {
-    final selectedTest = context.watch(selectedTestProvider);
+  Component build(BuildContext context) {
 
     if (selectedTest == null) {
       return Container(
@@ -16,7 +17,7 @@ class DetailPanel extends StatelessComponent {
             text: TextSpan(
               text: 'Select a test to view details',
               style: TextStyle(
-                foreground: Paint()..color = Color.fromARGB(255, 150, 150, 150),
+                color: Color.fromARGB(255, 150, 150, 150),
               ),
             ),
           ),
@@ -36,8 +37,8 @@ class DetailPanel extends StatelessComponent {
                 text: TextSpan(
                   text: 'Details',
                   style: TextStyle(
-                    foreground: Paint()..color = Color.fromARGB(255, 100, 200, 100),
-                    bold: true,
+                    color: Color.fromARGB(255, 100, 200, 100),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
@@ -48,14 +49,14 @@ class DetailPanel extends StatelessComponent {
                     TextSpan(
                       text: 'Path: ',
                       style: TextStyle(
-                        foreground: Paint()..color = Color.fromARGB(255, 100, 150, 255),
-                        bold: true,
+                        color: Color.fromARGB(255, 100, 150, 255),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     TextSpan(
                       text: selectedTest.path,
                       style: TextStyle(
-                        foreground: Paint()..color = Color.fromARGB(255, 200, 200, 200),
+                        color: Color.fromARGB(255, 200, 200, 200),
                       ),
                     ),
                   ],
@@ -68,8 +69,8 @@ class DetailPanel extends StatelessComponent {
                     TextSpan(
                       text: 'Description: ',
                       style: TextStyle(
-                        foreground: Paint()..color = Color.fromARGB(255, 100, 150, 255),
-                        bold: true,
+                        color: Color.fromARGB(255, 100, 150, 255),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     TextSpan(
@@ -77,7 +78,7 @@ class DetailPanel extends StatelessComponent {
                           ? '(none)'
                           : selectedTest.description,
                       style: TextStyle(
-                        foreground: Paint()..color = Color.fromARGB(255, 200, 200, 200),
+                        color: Color.fromARGB(255, 200, 200, 200),
                       ),
                     ),
                   ],
@@ -90,14 +91,14 @@ class DetailPanel extends StatelessComponent {
                     TextSpan(
                       text: 'Modified: ',
                       style: TextStyle(
-                        foreground: Paint()..color = Color.fromARGB(255, 100, 150, 255),
-                        bold: true,
+                        color: Color.fromARGB(255, 100, 150, 255),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     TextSpan(
                       text: selectedTest.lastModified.toString().split('.')[0],
                       style: TextStyle(
-                        foreground: Paint()..color = Color.fromARGB(255, 200, 200, 200),
+                        color: Color.fromARGB(255, 200, 200, 200),
                       ),
                     ),
                   ],
@@ -110,8 +111,8 @@ class DetailPanel extends StatelessComponent {
                     TextSpan(
                       text: 'Test Cases: ${selectedTest.testCases.length}',
                       style: TextStyle(
-                        foreground: Paint()..color = Color.fromARGB(255, 100, 150, 255),
-                        bold: true,
+                        color: Color.fromARGB(255, 100, 150, 255),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -124,13 +125,13 @@ class DetailPanel extends StatelessComponent {
                       TextSpan(
                         text: '  • ',
                         style: TextStyle(
-                          foreground: Paint()..color = Color.fromARGB(255, 200, 150, 100),
+                          color: Color.fromARGB(255, 200, 150, 100),
                         ),
                       ),
                       TextSpan(
                         text: tc.name,
                         style: TextStyle(
-                          foreground: Paint()..color = Color.fromARGB(255, 180, 180, 180),
+                          color: Color.fromARGB(255, 180, 180, 180),
                         ),
                       ),
                     ],

@@ -1,18 +1,19 @@
 import 'package:nocterm/nocterm.dart';
-import 'package:riverpod/riverpod.dart';
-import '../state.dart';
 import '../../models/test_file.dart';
 
-class TestListWidget extends StatefulComponent {
-  @override
-  State<StatefulComponent> createState() => _TestListWidgetState();
-}
+class TestListWidget extends StatelessComponent {
+  final List<TestFile> tests;
+  final int selectedIndex;
+  final Function(int) onSelectionChanged;
 
-class _TestListWidgetState extends State<TestListWidget> {
+  const TestListWidget({
+    required this.tests,
+    required this.selectedIndex,
+    required this.onSelectionChanged,
+  });
+
   @override
-  Widget build(BuildContext context) {
-    final tests = context.watch(filteredTestsProvider);
-    final selectedIndex = context.watch(selectedTestIndexProvider);
+  Component build(BuildContext context) {
 
     if (tests.isEmpty) {
       return Container(
@@ -23,7 +24,7 @@ class _TestListWidgetState extends State<TestListWidget> {
             text: TextSpan(
               text: 'No tests found',
               style: TextStyle(
-                foreground: Paint()..color = Color.fromARGB(255, 150, 150, 150),
+                color: Color.fromARGB(255, 150, 150, 150),
               ),
             ),
           ),
@@ -42,8 +43,8 @@ class _TestListWidgetState extends State<TestListWidget> {
                 text: TextSpan(
                   text: 'Found Tests (${tests.length})',
                   style: TextStyle(
-                    foreground: Paint()..color = Color.fromARGB(255, 100, 200, 100),
-                    bold: true,
+                    color: Color.fromARGB(255, 100, 200, 100),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
@@ -53,37 +54,30 @@ class _TestListWidgetState extends State<TestListWidget> {
               final test = entry.value;
               final isSelected = index == selectedIndex;
 
-              return GestureDetector(
-                onTap: () {
-                  context.read(selectedTestIndexProvider.notifier).state = index;
-                },
-                child: Container(
-                  color: isSelected
-                      ? Color.fromARGB(255, 60, 100, 60)
-                      : Color.fromARGB(255, 30, 30, 30),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 0),
-                    child: RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: isSelected ? '> ' : '  ',
-                            style: TextStyle(
-                              foreground: Paint()
-                                  ..color = Color.fromARGB(255, 0, 200, 100),
-                            ),
+              return Container(
+                color: isSelected
+                    ? Color.fromARGB(255, 60, 100, 60)
+                    : Color.fromARGB(255, 30, 30, 30),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 0),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: isSelected ? '> ' : '  ',
+                          style: TextStyle(
+                            color: Color.fromARGB(255, 0, 200, 100),
                           ),
-                          TextSpan(
-                            text: test.displayName,
-                            style: TextStyle(
-                              foreground: Paint()
-                                  ..color = isSelected
-                                      ? Color.fromARGB(255, 255, 255, 255)
-                                      : Color.fromARGB(255, 200, 200, 200),
-                            ),
+                        ),
+                        TextSpan(
+                          text: test.displayName,
+                          style: TextStyle(
+                            color: isSelected
+                                ? Color.fromARGB(255, 255, 255, 255)
+                                : Color.fromARGB(255, 200, 200, 200),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
