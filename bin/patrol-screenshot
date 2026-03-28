@@ -97,16 +97,23 @@ stop_spinner() {
 SCREENSHOT_COUNT=0
 START_TIME=$(date +%s)
 
+echo "[debug] Running: patrol test --target \"$TEST_FILE\" --device \"$DEVICE\" --show-flutter-logs"
+echo "[debug] Working directory: $(pwd)"
+
+PATROL_EXIT=0
 patrol test --target "$TEST_FILE" --device "$DEVICE" --show-flutter-logs 2>&1 | while IFS= read -r line; do
 
   # Print normal output (suppress screenshot protocol lines)
   if [[ "$line" != *"[[PATROL_SCREENSHOT_START|"* ]] && \
      [[ "$line" != *"[[PATROL_SCREENSHOT_CHUNK|"* ]] && \
      [[ "$line" != *"[[PATROL_SCREENSHOT_END|"* ]]; then
-    echo "$line"
+    echo "[patrol] $line"
   fi
 
   # --- Handle START ---
+  if [[ "$line" == *"[[PATROL_SCREENSHOT_START"* ]]; then
+    echo "[debug] Matched SCREENSHOT_START: $line"
+  fi
   if [[ "$line" == *"[[PATROL_SCREENSHOT_START|"* ]]; then
     payload="${line#*\[\[PATROL_SCREENSHOT_START|}"
     name="${payload%\]\]*}"
@@ -145,6 +152,8 @@ patrol test --target "$TEST_FILE" --device "$DEVICE" --show-flutter-logs 2>&1 | 
     fi
   fi
 done
+PATROL_EXIT="${PIPESTATUS[0]}"
+echo "[debug] patrol exit code: $PATROL_EXIT"
 
 END_TIME=$(date +%s)
 DURATION=$((END_TIME - START_TIME))

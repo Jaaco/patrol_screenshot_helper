@@ -100,10 +100,17 @@ void main(List<String> arguments) async {
   int screenshotCount = 0;
 
   try {
-    final process = await Process.start(
-      'patrol',
-      ['test', '--target', testFile, '--device', device, '--show-flutter-logs'],
-    );
+    final args = ['test', '--target', testFile, '--device', device, '--show-flutter-logs', '--verbose'];
+    stderr.writeln('[debug] Running: patrol ${args.join(' ')}');
+    stderr.writeln('[debug] Working directory: ${Directory.current.path}');
+
+    final process = await Process.start('patrol', args);
+
+    // Forward stderr directly so nothing is swallowed
+    process.stderr
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .listen((line) => stderr.writeln('[patrol stderr] $line'));
 
     final lines = process.stdout
         .transform(utf8.decoder)
@@ -113,6 +120,7 @@ void main(List<String> arguments) async {
     Map<String, StringBuffer> pendingScreenshots = {};
 
     await for (final line in lines) {
+      stderr.writeln('[patrol stdout raw] $line');
       // Check for screenshot protocol markers
       if (line.contains('[[PATROL_SCREENSHOT_START|')) {
         final payload = _extractPayload(line, 'PATROL_SCREENSHOT_START');
@@ -151,6 +159,7 @@ void main(List<String> arguments) async {
 
     spinnerController.stop();
     final exitCode = await process.exitCode;
+    stderr.writeln('[debug] patrol exit code: $exitCode');
     if (exitCode != 0) {
       exit(exitCode);
     }
