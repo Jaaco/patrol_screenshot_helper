@@ -5,8 +5,11 @@ import 'dart:io';
 const String version = '0.1.0';
 
 void main(List<String> arguments) async {
-  String device = 'chrome';
-  String outBase = 'test_results';
+  final config = _loadConfig();
+
+  String device = (config['device'] as String?) ?? 'chrome';
+  String outBase = (config['outputFolder'] as String?) ?? 'test_results';
+  String inputFolder = (config['inputFolder'] as String?) ?? 'integration_test';
   String? testFile;
   bool verbose = false;
 
@@ -27,6 +30,13 @@ void main(List<String> arguments) async {
           exit(1);
         }
         outBase = arguments[++i];
+        break;
+      case '--input-dir':
+        if (i + 1 >= arguments.length) {
+          stderr.writeln('Error: --input-dir requires a value');
+          exit(1);
+        }
+        inputFolder = arguments[++i];
         break;
       case '--verbose':
       case '-v':
@@ -90,6 +100,7 @@ void main(List<String> arguments) async {
   print('  patrol-screenshot v$version');
   print('  Test run #$nextId');
   print('  Target:      $testFile');
+  print('  Input folder: $inputFolder');
   print('  Device:      $device');
   print('  Screenshots: $screenshotDirPath');
   print('======================================================');
@@ -106,6 +117,7 @@ void main(List<String> arguments) async {
       if (verbose) '--verbose',
     ];
     if (verbose) {
+      stderr.writeln('[debug] Config: $config');
       stderr.writeln('[debug] Running: patrol ${args.join(' ')}');
       stderr.writeln('[debug] Working directory: ${Directory.current.path}');
     }
@@ -184,6 +196,40 @@ void main(List<String> arguments) async {
   print('======================================================');
 }
 
+Map<String, dynamic> _loadConfig() {
+  final result = <String, dynamic>{};
+
+  // Layer 1: Global config (~/.patrol_screenshot_helper/config.json)
+  final home = Platform.environment['HOME'];
+  if (home != null) {
+    final globalFile = File('$home/.patrol_screenshot_helper/config.json');
+    try {
+      result.addAll(jsonDecode(globalFile.readAsStringSync()) as Map<String, dynamic>);
+    } on FileSystemException {
+      // Missing file — skip silently.
+    } on FormatException {
+      stderr.writeln(
+        'Warning: Could not parse global config at ${globalFile.path} — skipping.',
+      );
+    }
+  }
+
+  // Layer 2: Project config (.patrol_screenshot.json in cwd)
+  // Project keys overwrite global keys; unset keys fall back to global or defaults.
+  final projectFile = File('${Directory.current.path}/.patrol_screenshot.json');
+  try {
+    result.addAll(jsonDecode(projectFile.readAsStringSync()) as Map<String, dynamic>);
+  } on FileSystemException {
+    // Missing file — skip silently.
+  } on FormatException {
+    stderr.writeln(
+      'Warning: Could not parse project config at ${projectFile.path} — skipping.',
+    );
+  }
+
+  return result;
+}
+
 void _printUsage() {
   print('patrol-screenshot v$version — Screenshot capture for Patrol integration tests');
   print('');
@@ -192,6 +238,7 @@ void _printUsage() {
   print('');
   print('Options:');
   print('  --device <device>      Target device (default: chrome)');
+  print('  --input-dir <path>     Test input folder (default: integration_test)');
   print('  --output-dir <path>    Base output directory (default: test_results)');
   print('  --verbose, -v          Enable verbose debug output');
   print('  --help                 Show this help message');
@@ -200,6 +247,10 @@ void _printUsage() {
   print('  patrol-screenshot integration_test/main_test.dart');
   print('  patrol-screenshot integration_test/main_test.dart --device chrome');
   print('  patrol-screenshot integration_test/main_test.dart --output-dir ./screenshots');
+  print('');
+  print('Config files (lower priority than CLI args):');
+  print('  ~/.patrol_screenshot_helper/config.json   global');
+  print('  .patrol_screenshot.json                   project (current directory)');
 }
 
 String? _extractPayload(String line, String markerType) {
