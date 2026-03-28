@@ -58,7 +58,7 @@ class TestDiscoveryEngine {
         RegExp(r'void\s+main\s*\(\s*\)\s*\{').firstMatch(content);
     if (mainMatch != null) {
       // Look for group() call
-      final groupPattern = RegExp(r"group\s*\(\s*['\"]([^'\"]+)['\"]");
+      final groupPattern = RegExp(r"group\s*\(\s*['\x22]([^']*)['\x22]");
       final groupMatch = groupPattern.firstMatch(content);
       if (groupMatch != null) {
         return groupMatch.group(1) ?? path.split('/').last;
@@ -97,8 +97,8 @@ class TestDiscoveryEngine {
   static List<TestCase> _extractTestCases(String content) {
     final cases = <TestCase>[];
     final lines = content.split('\n');
-    final testPattern = RegExp(r"testWidgets\s*\(\s*['\"]([^'\"]+)['\"]");
-    final testSimplePattern = RegExp(r"test\s*\(\s*['\"]([^'\"]+)['\"]");
+    final testPattern = RegExp(r"testWidgets\s*\(\s*['\x22]([^']*)['\x22]");
+    final testSimplePattern = RegExp(r"test\s*\(\s*['\x22]([^']*)['\x22]");
 
     for (var i = 0; i < lines.length; i++) {
       var match = testPattern.firstMatch(lines[i]);

@@ -1,12 +1,11 @@
 import 'package:nocterm/nocterm.dart';
-import 'package:riverpod/riverpod.dart';
-import 'state.dart';
 import '../models/test_file.dart';
 import 'components/header_panel.dart';
 import 'components/search_bar.dart';
 import 'components/test_list.dart';
 import 'components/detail_panel.dart';
 import 'components/footer_panel.dart';
+import 'state.dart';
 
 class MainApp extends StatefulComponent {
   @override
@@ -14,40 +13,59 @@ class MainApp extends StatefulComponent {
 }
 
 class _MainAppState extends State<MainApp> {
-  late ProviderContainer _container;
+  String _searchQuery = '';
+  int _selectedIndex = 0;
+  TestFile? _selectedTest;
+  List<TestFile> _tests = [];
+  ExecutionStatus _status = ExecutionStatus.idle;
 
   @override
   void initState() {
-    _container = ProviderContainer();
+    // Initialize with empty state
     super.initState();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return UncontrolledProviderScope(
-      container: _container,
-      child: Column(
-        children: [
-          SizedBox(height: 1, child: HeaderPanel()),
-          SizedBox(height: 1, child: SearchBar()),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: TestListWidget(),
+  Component build(BuildContext context) {
+    final filteredTests = _tests.isEmpty ? <TestFile>[] : _tests;
+
+    return Column(
+      children: [
+        SizedBox(height: 1, child: HeaderPanel()),
+        SizedBox(height: 1, child: SearchBar(
+          query: _searchQuery,
+          onQueryChanged: (value) {
+            setState(() => _searchQuery = value);
+          },
+        )),
+        Expanded(
+          child: Row(
+            children: [
+              SizedBox(
+                width: 40,
+                child: TestListWidget(
+                  tests: filteredTests,
+                  selectedIndex: _selectedIndex,
+                  onSelectionChanged: (index) {
+                    setState(() {
+                      _selectedIndex = index;
+                      _selectedTest = index < filteredTests.length ? filteredTests[index] : null;
+                    });
+                  },
                 ),
-                SizedBox(width: 2, child: Container(color: Color.fromARGB(255, 40, 40, 40))),
-                Expanded(
-                  flex: 2,
-                  child: DetailPanel(),
-                ),
-              ],
-            ),
+              ),
+              SizedBox(width: 1, child: Container(color: Color.fromARGB(255, 40, 40, 40))),
+              Expanded(
+                child: DetailPanel(selectedTest: _selectedTest),
+              ),
+            ],
           ),
-          SizedBox(height: 1, child: FooterPanel()),
-        ],
-      ),
+        ),
+        SizedBox(height: 1, child: FooterPanel(
+          status: _status,
+          tests: filteredTests,
+        )),
+      ],
     );
   }
 }

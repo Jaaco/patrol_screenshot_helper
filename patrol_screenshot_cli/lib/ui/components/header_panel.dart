@@ -1,5 +1,4 @@
 import 'package:nocterm/nocterm.dart';
-import 'package:nocterm/src/components/rich_text.dart';
 
 class HeaderPanel extends StatelessComponent {
   @override

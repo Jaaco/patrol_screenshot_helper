@@ -1,12 +1,17 @@
 import 'package:nocterm/nocterm.dart';
-import 'package:riverpod/riverpod.dart';
 import '../state.dart';
 
 class FooterPanel extends StatelessComponent {
+  final ExecutionStatus status;
+  final List tests;
+
+  const FooterPanel({
+    required this.status,
+    required this.tests,
+  });
+
   @override
-  Widget build(BuildContext context) {
-    final status = context.watch(executionStatusProvider);
-    final tests = context.watch(filteredTestsProvider);
+  Component build(BuildContext context) {
 
     final statusText = _statusText(status);
     final statusColor = _statusColor(status);
@@ -24,13 +29,13 @@ class FooterPanel extends StatelessComponent {
                   TextSpan(
                     text: '[▶ Run] ',
                     style: TextStyle(
-                      foreground: Paint()..color = Color.fromARGB(255, 0, 200, 100),
+                      color: Color.fromARGB(255, 0, 200, 100),
                     ),
                   ),
                   TextSpan(
                     text: '[Cancel] ',
                     style: TextStyle(
-                      foreground: Paint()..color = Color.fromARGB(255, 200, 0, 0),
+                      color: Color.fromARGB(255, 200, 0, 0),
                     ),
                   ),
                 ],
@@ -39,14 +44,14 @@ class FooterPanel extends StatelessComponent {
             RichText(
               text: TextSpan(
                 text: statusText,
-                style: TextStyle(foreground: Paint()..color = statusColor),
+                style: TextStyle(color: statusColor),
               ),
             ),
             RichText(
               text: TextSpan(
                 text: 'Found: ${tests.length} | ↑↓: Nav | Enter: Run | q: Quit',
                 style: TextStyle(
-                  foreground: Paint()..color = Color.fromARGB(255, 150, 150, 150),
+                  color: Color.fromARGB(255, 150, 150, 150),
                 ),
               ),
             ),
