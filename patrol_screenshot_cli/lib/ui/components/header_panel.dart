@@ -1,10 +1,11 @@
 import 'package:nocterm/nocterm.dart';
+import 'package:nocterm/src/components/rich_text.dart';
 
 class HeaderPanel extends StatelessComponent {
   @override
-  Widget build(BuildContext context) {
+  Component build(BuildContext context) {
     return Container(
-      color: Color.fromARGB(255, 30, 30, 30),
+      color: Color.fromRGB(30, 30, 30),
       child: Padding(
         padding: const EdgeInsets.all(1),
         child: RichText(
@@ -13,14 +14,14 @@ class HeaderPanel extends StatelessComponent {
               TextSpan(
                 text: '▶ ',
                 style: TextStyle(
-                  foreground: Paint()..color = Color.fromARGB(255, 0, 200, 100),
+                  color: Color.fromRGB(0, 200, 100),
                 ),
               ),
               TextSpan(
                 text: 'Patrol Screenshot Helper - Test Runner',
                 style: TextStyle(
-                  foreground: Paint()..color = Color.fromARGB(255, 255, 255, 255),
-                  bold: true,
+                  color: Color.fromRGB(255, 255, 255),
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
